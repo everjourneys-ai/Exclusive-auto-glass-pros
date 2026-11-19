@@ -70,8 +70,19 @@ npm run dev                  # http://localhost:3000
 | `LEAD_ALERT_FROM` | Email alerts: sender on a domain verified in Resend | No |
 | `NEXT_PUBLIC_GTM_ID` | Conversion tracking (optional) | Yes (public by design) |
 
-### Database
-Apply `supabase/migrations/*.sql` to the Supabase project, either with the Supabase CLI or in the SQL editor. The `leads` table has Row Level Security turned on with no public policies, so only the server can read or write it.
+### Database (Supabase)
+| | |
+|---|---|
+| Project | `exclusive-auto-glass-pros` (organization: everjourneys) |
+| Project ref | `ncpzkjinvknuocbgmobr` |
+| API URL | `https://ncpzkjinvknuocbgmobr.supabase.co` (set as `SUPABASE_URL` in Vercel) |
+| Region | us-east-1, the same region as Vercel's default functions |
+| Plan | **Free.** Projects pause after about a week of low activity. Upgrade to Pro ($25/mo) before relying on it for paid traffic. |
+| Schema | `supabase/migrations/20261119000000_create_leads.sql` (applied 2026-11-19) |
+
+The `leads` table has Row Level Security turned on with **no public policies**, so only the server, using the secret key, can read or write it. Supabase's security advisor reports "RLS enabled, no policy" as INFO. That is intentional.
+
+To change the schema, add a new file to `supabase/migrations/` and apply it with the Supabase CLI or the SQL editor. Never edit a migration that has already been applied.
 
 ## Conversion tracking
 Taps on call, text and email links and successful form submissions push these events to `window.dataLayer`:
@@ -87,7 +98,9 @@ Taps on call, text and email links and successful form submissions push these ev
 - [ ] Fill every `[bracketed]` placeholder: hours, rating, certification, license #, prices, quote email, founding year (most of these are in `src/lib/business.ts`)
 - [ ] Replace the review placeholders with real Google reviews
 - [ ] Confirm the California insurance wording ("often $0", right-to-choose)
-- [ ] Create the Supabase project, apply the migration, and set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in Vercel
+- [x] Create the Supabase project, apply the migration, set `SUPABASE_URL` in Vercel
+- [ ] Add `SUPABASE_SECRET_KEY` in Vercel (mark it Sensitive), then redeploy
+- [ ] Upgrade Supabase to Pro so the leads database never pauses
 - [ ] Set up Resend: verify the domain and set `RESEND_API_KEY`, `LEAD_ALERT_EMAIL` and `LEAD_ALERT_FROM`
 - [ ] Submit a test lead in production and confirm it arrives
 - [ ] Set up GTM, plus Google Ads and Meta conversion tags

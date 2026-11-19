@@ -19,6 +19,7 @@ GoDaddy DNS ──► Vercel (project: exclusive-auto-glass-pros-design, Root Di
                    └── POST /api/leads  (serverless function)
                           ├── validate (zod) · honeypot · rate limit
                           ├──► Supabase Postgres: public.leads   (durable record)
+                          │      project exclusive-auto-glass-pros · ref ncpzkjinvknuocbgmobr · us-east-1
                           └──► Resend email API: alert to the shop (speed to lead)
 
 Browser ──► Google Tag Manager (optional) ──► Google Ads / Meta conversion tags
@@ -63,6 +64,7 @@ Browser ──► Google Tag Manager (optional) ──► Google Ads / Meta conv
 - **The business name, address and phone in `business.ts` must match the Google Business Profile.**
 
 ## Known limitations
+- Supabase is on the Free plan, so the leads database pauses after about a week of low activity. Upgrade to Pro before running paid traffic, or rely on the email alert as a backup.
 - The rate limiter is per serverless instance, not global. If spam becomes a problem, move it to Vercel Firewall or Upstash.
 - The legal pages are drafts and need professional review.
 - Reviews, hours, prices and certifications are still placeholders.
