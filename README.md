@@ -1,92 +1,95 @@
-# Exclusive Auto Glass Pros — Paid Ads Landing Page
+# Exclusive Auto Glass Pros: Web App
 
-A single-purpose landing page for paid ad traffic (Google Ads, Meta) for **Exclusive Auto Glass Pros**, a shop-based auto glass business in Westlake Village, CA. The goal is to turn high-intent visitors into **calls and texts** first, with a short quote form and email as secondary options.
-
-**Status:** Draft 1. The design is done, but the copy still has placeholders and the form isn't connected to anything yet. **Do not run ads to this page until the launch checklist below is complete.**
+This is the lead-generation web app for **Exclusive Auto Glass Pros**, a shop-based auto glass business in Westlake Village, CA. It's built for paid ad traffic, and its job is to turn visitors into **calls and texts** first, with quote-form leads and email as secondary options.
 
 | | |
 |---|---|
-| Business | Exclusive Auto Glass Pros |
+| Live site | https://exclusiveautoglasspros.com |
 | Address | 755 Lakefield Rd. Unit I, Westlake Village, CA 91361 |
 | Phone | (805) 917-2036 |
-| Service area | Westlake Village, Thousand Oaks, Newbury Park, Agoura Hills, Oak Park, Camarillo, Moorpark, Simi Valley, Ventura |
-| Model | Shop-based (not a mobile service) |
-| Design (Draft 1) | https://claude.ai/artifact/Tt9wUdqq4P33etEFfW2bEV |
+| Stack | Next.js 16 (React 19, TypeScript) on Vercel · Supabase (leads) · Resend (lead alerts) |
+| Architecture | [`docs/architecture.md`](docs/architecture.md) |
 
 ## Repository structure
 
 ```
 .
-├── site/
-│   └── index.html            # Deployable static page (HTML + CSS + a little vanilla JS)
-├── design/
-│   ├── landing-page.dc.html  # Source of the design canvas (Claude Design format)
-│   └── canvas.json           # Canvas layout index for the design
-├── docs/
-│   └── project-brief.md      # Project brief (mirrors the Notion Briefs page)
-├── .gitignore
-└── README.md
+├── site/                         # The web app. Vercel's Root Directory MUST be "site".
+│   ├── src/
+│   │   ├── app/                  # Routes: / (landing), /privacy, /terms, /sms-terms,
+│   │   │   │                     #   robots.txt, sitemap.xml, 404
+│   │   │   └── api/leads/        # POST /api/leads: quote-form endpoint (serverless)
+│   │   ├── components/           # Page sections, QuoteForm, header/footer, icons
+│   │   └── lib/
+│   │       ├── business.ts       # ★ Name, address, phone, hours, service areas: edit here
+│   │       ├── lead-schema.ts    # Form validation (shared by browser + server)
+│   │       ├── lead-delivery.ts  # Supabase insert + Resend email alert
+│   │       ├── analytics.ts      # GTM dataLayer events + UTM/gclid capture
+│   │       └── rate-limit.ts
+│   ├── tests/                    # Vitest: schema + API route
+│   ├── .env.example              # Every environment variable, documented
+│   └── vercel.json               # Pins framework to Next.js
+├── supabase/migrations/          # Database schema (leads table, RLS)
+├── design/                       # Draft 1 design canvas source (reference only, not deployed)
+└── docs/                         # Architecture + project brief
 ```
-
-- **`site/`** is what gets deployed. It is one self-contained HTML file with no build step and no dependencies. Fonts load from Google Fonts.
-- **`design/`** is the reference design. It is exported from the design canvas so that design changes are version-controlled too. It is **not** deployed: it needs the design editor's runtime to render.
-- When the design changes, update `design/` first and then carry the change into `site/index.html`.
 
 ## Run locally
 
-No install is needed. Open `site/index.html` in a browser, or serve the folder:
+Requires Node 20.9 or later.
 
 ```bash
-npx serve site
-# or
-python3 -m http.server --directory site 8000
+cd site
+npm install
+cp .env.example .env.local   # optional: add keys to test real lead delivery
+npm run dev                  # http://localhost:3000
 ```
 
-## How the page converts
+| Command | What it does |
+|---|---|
+| `npm run dev` | Starts the dev server |
+| `npm run build` | Production build (pages prerender as static HTML) |
+| `npm run check` | Runs typecheck, lint and tests (run before every PR) |
 
-- **There is no site navigation.** Every section ends in Call, Text or Quote.
-- **Click to call** (`tel:+18059172036`) is in the sticky header, the hero, the service cards, the insurance section, the urgency band and the final call to action.
-- **Click to text** (`sms:+18059172036`) opens a message with the text already started, so visitors can send a photo of the damage.
-- **The quote form** asks for: damage type, vehicle, ZIP, preferred contact method (call / text / email), and name with phone or email.
-- **On phones**, a Call · Text · Quote action bar is pinned to the bottom of the screen (below 900px wide).
-- **The FAQ** uses native `<details>` elements, so it needs no JavaScript.
+## How leads work
 
-## Quote form — not connected yet
+1. A visitor submits the quote form. The browser validates it and sends it to `POST /api/leads`.
+2. The server validates it again, checks the honeypot and the rate limit, then delivers it:
+   - **Supabase** `public.leads` table, which is the durable record of every lead
+   - an **email alert** sent through Resend, so the shop sees the lead within minutes
+3. **If neither destination is configured, the form shows an error** asking the visitor to call or text. Leads are never silently dropped.
 
-In `site/index.html`, `FORM_ENDPOINT` is empty, so for now submissions are only validated and the visitor sees the confirmation screen. **No lead is sent anywhere.** Before launch:
+### Environment variables (Vercel → Project → Settings → Environment Variables)
 
-1. Choose the form backend: a form service, a serverless function, or a CRM webhook.
-2. Set `FORM_ENDPOINT` to the approved URL. Never put API keys or secrets in this file, because it runs in the browser.
-3. Make sure every lead triggers an instant SMS or email alert to the shop.
-4. Keep the honeypot field (`company`), and add rate limiting or CAPTCHA on the backend if spam shows up.
+| Variable | Needed for | Exposed to browser? |
+|---|---|---|
+| `SUPABASE_URL` | Storing leads | No |
+| `SUPABASE_SECRET_KEY` | Storing leads | **No: never add a `NEXT_PUBLIC_` prefix** |
+| `RESEND_API_KEY` | Email alerts | No |
+| `LEAD_ALERT_EMAIL` | Email alerts: who receives them (comma-separated) | No |
+| `LEAD_ALERT_FROM` | Email alerts: sender on a domain verified in Resend | No |
+| `NEXT_PUBLIC_GTM_ID` | Conversion tracking (optional) | Yes (public by design) |
+
+### Database
+Apply `supabase/migrations/*.sql` to the Supabase project, either with the Supabase CLI or in the SQL editor. The `leads` table has Row Level Security turned on with no public policies, so only the server can read or write it.
+
+## Conversion tracking
+Taps on call, text and email links and successful form submissions push these events to `window.dataLayer`:
+`click_call`, `click_text`, `click_email`, `lead_submit`. Set `NEXT_PUBLIC_GTM_ID`, then in Google Tag Manager fire your Google Ads and Meta conversion tags from those events. UTM parameters, `gclid` and `fbclid` are saved with each lead.
+
+## Deployment
+- `main` deploys to production at exclusiveautoglasspros.com automatically.
+- Pull requests get their own Vercel preview links.
+- Vercel project: `exclusive-auto-glass-pros-design`. Root Directory: **`site`**.
+- DNS is managed at GoDaddy. The main domain has an A record pointing to Vercel, and www has a CNAME pointing to Vercel.
 
 ## Launch checklist
-
-- [ ] Fill every `[bracketed]` placeholder: hours, Google rating and review count, certification, license #, prices, quote email, founding year
-- [ ] Replace the review placeholders with 3 **real** Google reviews
-- [ ] Confirm the insurance wording for California ("often $0", right-to-choose)
-- [ ] Confirm the FAQ answers match how the shop works (waiting vs. drop-off)
-- [ ] Connect the quote form (see above)
-- [ ] Call tracking: show a tracking number only to ad visitors, and keep (805) 917-2036 on the Google Business Profile
-- [ ] Conversion tracking for calls, texts, form submits and email clicks (Google Ads / Meta)
-- [ ] Legal review of the SMS consent language (TCPA)
-- [ ] Privacy, Terms and SMS terms pages (the footer links are `#` for now)
-- [ ] Hosting and domain (e.g. Vercel static deploy from `site/`), DNS and HTTPS
-
-## Deployment (planned)
-
-```
-Domain → DNS → Static hosting (serves site/) → Browser
-                                     ↘ Form endpoint → CRM + SMS/email alert to shop
-```
-
-This is static hosting with no server. The only moving part is the form endpoint. Hosting, domain and form backend are still to be decided at the architecture step.
-
-## Branching
-
-- `main` holds the current approved version.
-- Changes go on short feature branches, are merged through pull requests, and the merge triggers a deploy once hosting is connected.
-
-## Documentation
-
-The project docs live in Notion (Workflow DB → Projects → *Exclusive Auto Glass Pros*, and the matching page in Briefs).
+- [ ] Fill every `[bracketed]` placeholder: hours, rating, certification, license #, prices, quote email, founding year (most of these are in `src/lib/business.ts`)
+- [ ] Replace the review placeholders with real Google reviews
+- [ ] Confirm the California insurance wording ("often $0", right-to-choose)
+- [ ] Create the Supabase project, apply the migration, and set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` in Vercel
+- [ ] Set up Resend: verify the domain and set `RESEND_API_KEY`, `LEAD_ALERT_EMAIL` and `LEAD_ALERT_FROM`
+- [ ] Submit a test lead in production and confirm it arrives
+- [ ] Set up GTM, plus Google Ads and Meta conversion tags
+- [ ] Get the privacy, terms and SMS terms pages reviewed
+- [ ] Make www redirect to the main domain in Vercel → Domains
