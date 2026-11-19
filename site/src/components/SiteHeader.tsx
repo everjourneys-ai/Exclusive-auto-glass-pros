@@ -1,8 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { business, telHref } from "@/lib/business";
 
-import { LogoMark, PhoneIcon } from "./Icons";
+import { PhoneIcon } from "./Icons";
 
 /** Urgency strip + sticky header. No navigation links — only conversion actions. */
 export function SiteHeader() {
@@ -21,8 +22,15 @@ export function SiteHeader() {
       <header className="site-header">
         <div className="container header-row">
           <Link href="/" className="brand" aria-label={`${business.name} home`}>
-            <LogoMark />
-            <span>{business.name}</span>
+            <Image
+              src="/logo-exclusive.png"
+              alt=""
+              width={201}
+              height={28}
+              priority
+              className="brand-logo"
+            />
+            <span className="brand-sub">Auto Glass Pros</span>
           </Link>
           <div className="header-actions">
             <div className="hdr-num">

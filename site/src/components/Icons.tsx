@@ -60,15 +60,6 @@ export function ClockIcon({ size = 30, className }: IconProps) {
   );
 }
 
-export function LogoMark({ size = 34, className }: IconProps) {
-  return (
-    <svg {...base} width={size} height={size} strokeWidth={2} className={className}>
-      <path d="M3 9c3-3 15-3 18 0l-2 9H5z" />
-      <path d="M9 11l2 2-1 3" />
-    </svg>
-  );
-}
-
 export function StarIcon({ size = 20 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="#FFB020" aria-hidden="true">

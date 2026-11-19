@@ -125,7 +125,9 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .header-row { padding-block: 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--navy); }
 .brand:hover { color: var(--navy); }
-.brand span { font-family: var(--font-display); font-weight: 800; font-size: 21px; line-height: 1.1; letter-spacing: -0.02em; }
+.brand { flex-direction: column; align-items: flex-start; gap: 3px; }
+.brand-logo { display: block; height: 28px; width: auto; }
+.brand-sub { font-family: var(--font-display); font-weight: 700; font-size: 11px; line-height: 1; letter-spacing: 0.32em; text-transform: uppercase; color: var(--navy); }
 .header-actions { display: flex; align-items: center; gap: 16px; }
 .hdr-num { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
 .hdr-label { font-size: 13px; color: var(--muted); }
@@ -256,7 +258,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
   .section { padding: 60px 0; }
 }
 @media (max-width: 420px) {
-  .brand span { font-size: 17px; }
+  .brand-logo { height: 22px; }
+  .brand-sub { font-size: 9px; letter-spacing: 0.26em; }
   .quote-card { padding: 22px 18px; }
   .chips-3 .chip { font-size: 14px; }
 }
